@@ -921,35 +921,6 @@ void TinyTIFFWriter_close_withmetadatadescription(TinyTIFFWriterFile* tiff, doub
     }
 }
 
-
-#ifdef HAVE_SPRINTF_S
-#define TINTIFFWRITER_WRITEImageDescriptionTemplate(tiff) \
-    if (tiff->frames<=0) {\
-        int datapos=0;\
-        int sizepos=0;\
-        char description[TINYTIFFWRITER_DESCRIPTION_SIZE+1];\
-        memset(description, 0, TINYTIFFWRITER_DESCRIPTION_SIZE+1);\
-        sprintf_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, "TinyTIFFWriter_version=1.1\n");\
-        description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0';\
-        TinyTIFFWriter_writeIFDEntryASCIIARRAY(tiff, TIFF_FIELD_IMAGEDESCRIPTION, description, TINYTIFFWRITER_DESCRIPTION_SIZE, &datapos, &sizepos);\
-        tiff->descriptionOffset=tiff->lastStartPos+datapos;\
-        tiff->descriptionSizeOffset=tiff->lastStartPos+sizepos;\
-     }
-#else
-#define TINTIFFWRITER_WRITEImageDescriptionTemplate(tiff) \
-    if (tiff->frames<=0) {\
-        int datapos=0;\
-        int sizepos=0;\
-        char description[TINYTIFFWRITER_DESCRIPTION_SIZE+1];\
-        memset(description, 0, TINYTIFFWRITER_DESCRIPTION_SIZE+1);\
-        sprintf(description, "TinyTIFFWriter_version=1.1\n");\
-        description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0';\
-        TinyTIFFWriter_writeIFDEntryASCIIARRAY(tiff, TIFF_FIELD_IMAGEDESCRIPTION, description, TINYTIFFWRITER_DESCRIPTION_SIZE, &datapos, &sizepos);\
-        tiff->descriptionOffset=tiff->lastStartPos+datapos;\
-        tiff->descriptionSizeOffset=tiff->lastStartPos+sizepos;\
-     }
-#endif
-
 int TinyTIFFWriter_writeImageMultiSample(TinyTIFFWriterFile *tiff, const void *data, enum TinyTIFFSampleLayout inputOrganisation, enum TinyTIFFSampleLayout outputOrganization)
 {
     if (!tiff) {
@@ -983,7 +954,21 @@ int TinyTIFFWriter_writeImageMultiSample(TinyTIFFWriterFile *tiff, const void *d
     TinyTIFFWriter_writeIFDEntrySHORT(tiff, TIFF_FIELD_PHOTOMETRICINTERPRETATION, tiff->photometricInterpretation);
 
 #ifdef TINYTIFF_WRITE_COMMENTS
-    TINTIFFWRITER_WRITEImageDescriptionTemplate(tiff);
+    if (tiff->frames<=0) {
+        int datapos=0;
+        int sizepos=0;
+        char description[TINYTIFFWRITER_DESCRIPTION_SIZE+1];
+        /* Note: The incorrect size with NUL fills caused this error in libtiff:
+           TIFFFetchNormalTag: Warning, ASCII value for tag "ImageDescription" contains null byte in value; value incorrectly truncated during reading due to implementation limitations.
+           So fill it with spaces now. */
+        memset(description, ' ', TINYTIFFWRITER_DESCRIPTION_SIZE+1);
+        //TODO a customer specific string (our yaml)
+        strncpy(description, "TinyTIFFWriter_version=1.1\n", TINYTIFFWRITER_DESCRIPTION_SIZE);
+        description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0'; // reserve for 1024 exifdata
+        TinyTIFFWriter_writeIFDEntryASCIIARRAY(tiff, TIFF_FIELD_IMAGEDESCRIPTION, description, TINYTIFFWRITER_DESCRIPTION_SIZE, &datapos, &sizepos);
+        tiff->descriptionOffset=tiff->lastStartPos+datapos;
+        tiff->descriptionSizeOffset=tiff->lastStartPos+sizepos;
+     }
 #endif // TINYTIFF_WRITE_COMMENTS
 
     if (outputOrganization==TinyTIFF_Separate) {
