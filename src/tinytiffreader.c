@@ -59,28 +59,8 @@
 #  define TinyTIFFReader_POSTYPE fpos_t
 #endif // TINYTIFF_USE_WINAPI_FOR_FILEIO
 
-/* BOS checks */
-#define BOS_UNKNOWN ((size_t)-1)
-#define _BOS_KNOWN(dest) ((size_t)BOS(dest) != BOS_UNKNOWN)
-#if defined __has_builtin
-#  if __has_builtin (__builtin_object_size)
-#    if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE > 1
-#      define BOS(dest) __builtin_object_size((dest), 1)
-#    else
-#      define BOS(dest) __builtin_object_size((dest), 0)
-#    endif
-#  else
-#    define BOS(dest) BOS_UNKNOWN
-#  endif
-#else
-#  define BOS(dest) BOS_UNKNOWN
-#endif
-
-
 /** \brief maximum length of error messages in bytes \internal */
 #define TIFF_LAST_ERROR_SIZE 1024
-
-
 
 
 
@@ -206,19 +186,8 @@ unsigned long TinyTIFFReader_doRangesOverlap(unsigned long xstart, unsigned long
     return TINYTIFF_FALSE;
 }
 
-int TinyTIFFReader_memcpy_s( void * dest, unsigned long destsz, const void * src, unsigned long count ) {
-#ifdef HAVE_MEMCPY_S
-    return memcpy_s(dest, destsz, src, count);
-#else
-    if ((!dest || !src) && count)
-        assert(0 && "memcpy_s: NULL dest or src");
-    if (_BOS_KNOWN(dest) && (BOS(dest) < destsz || BOS(dest) < count))
-        assert(0 && "memcpy_s: dest not big enough");
-    if (_BOS_KNOWN(src) && BOS(src) < count)
-        assert(0 && "memcpy_s: src not big enough");
-    memcpy(dest, src, count);
-    return 0;
-#endif
+void TinyTIFFReader_memcpy_s( void * dest, unsigned long destsz, const void * src, unsigned long count ) {
+    MEMCPY_S(dest, destsz, src, count);
 }
 
 void TinyTIFFReader_fopen(TinyTIFFReaderFile* tiff, const char* filename) {

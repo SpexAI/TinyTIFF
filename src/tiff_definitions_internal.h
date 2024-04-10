@@ -19,6 +19,8 @@
 #ifndef TIFF_DEFINITIONS_INTERNAL_H
 #define TIFF_DEFINITIONS_INTERNAL_H
 
+#include <assert.h>
+
 #define TIFF_ORDER_UNKNOWN 0
 #define TIFF_ORDER_BIGENDIAN 1
 #define TIFF_ORDER_LITTLEENDIAN 2
@@ -92,6 +94,71 @@
 #define TIFF_RESOLUTION_UNIT_INCH 2
 #define TIFF_RESOLUTION_UNIT_CENTIMETER 3
 
+/* BOS checks */
+#define BOS_UNKNOWN ((size_t)-1)
+#define _BOS_KNOWN(dest) ((size_t)BOS(dest) != BOS_UNKNOWN)
+#if defined __has_builtin
+#  if __has_builtin (__builtin_object_size)
+#    if defined(_FORTIFY_SOURCE) && _FORTIFY_SOURCE > 1
+#      define BOS(dest) __builtin_object_size((dest), 1)
+#    else
+#      define BOS(dest) __builtin_object_size((dest), 0)
+#    endif
+#  else
+#    define BOS(dest) BOS_UNKNOWN
+#  endif
+#else
+#  define BOS(dest) BOS_UNKNOWN
+#endif
+
+#ifdef HAVE_SPRINTF_S
+#define SPRINTF_S(dest, destsz, ...) sprintf_s(dest, destsz, __VA_ARGS__)
+#else
+#define SPRINTF_S(dest, destsz, ...) \
+    if (_BOS_KNOWN(dest) && BOS(dest) < destsz) \
+        assert(0 && "memcpy_s: destsz too big"); \
+    sprintf(dest, __VA_ARGS__)
+#endif
+
+#ifdef HAVE_MEMCPY_S
+#define MEMCPY_S(dest, destsz, src, count) memcpy_s(dest, destsz, src, count)
+#else
+#define MEMCPY_S(dest, destsz, src, count)         \
+    { if ((!dest || !src) && count)                \
+        assert(0 && "memcpy_s: NULL dest or src"); \
+      if (_BOS_KNOWN(dest) && (BOS(dest) < destsz || BOS(dest) < count)) \
+        assert(0 && "memcpy_s: dest not big enough"); \
+      if (_BOS_KNOWN(src) && BOS(src) < count)       \
+        assert(0 && "memcpy_s: src not big enough"); \
+    }                                                \
+    memcpy(dest, src, count)
+#endif
+
+#ifdef HAVE_STRCPY_S
+#define STRCPY_S(dest, destsz, src) strcpy_s(dest, destsz, src)
+#else
+#define STRCPY_S(dest, destsz, src)                   \
+    if (!dest || !src)                                \
+        assert(0 && "strcpy_s: NULL dest or src");    \
+    if (_BOS_KNOWN(dest) && (BOS(dest) < destsz))     \
+        assert(0 && "strcpy_s: destsz too big"); \
+    if (_BOS_KNOWN(src) && BOS(src) > destsz)         \
+        assert(0 && "strcpy_s: dest not big enough"); \
+    strcpy(dest, src)
+#endif
+
+#ifdef HAVE_STRCAT_S
+#define STRCAT_S(dest, destsz, src) strcat_s(dest, destsz, src)
+#else
+#define STRCAT_S(dest, destsz, src)                   \
+    if (!dest || !src)                                \
+        assert(0 && "strcat_s: NULL dest or src");    \
+    if (_BOS_KNOWN(dest) && BOS(dest) < destsz)       \
+        assert(0 && "strcat_s: destsz too big"); \
+    if (_BOS_KNOWN(src) && BOS(src) > destsz)         \
+        assert(0 && "strcat_s: dest not big enough"); \
+    strcat(dest, src)
+#endif
 
 
 #ifdef HAVE_STRCPY_S
@@ -99,6 +166,7 @@
 #else
 #define TINYTIFF_SET_LAST_ERROR(tiff, message) strcpy(tiff->lastError, message);
 #endif
+
 
 
 #endif // TIFF_DEFINITIONS_INTERNAL_H

@@ -811,28 +811,16 @@ void TinyTIFFWriter_close_withdescription(TinyTIFFWriterFile* tiff, const char* 
 
               if (inlen>0) {
                   if (inlen<=TINYTIFFWRITER_DESCRIPTION_SIZE) {
-    #ifdef HAVE_STRCPY_S
-                    strcpy_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, imageDescription);
-    #else
-                    strcpy(description, imageDescription);
-    #endif
+                    STRCPY_S(description, sizeof(description), imageDescription);
                   } else {
-    #ifdef HAVE_MEMCPY_S
-                      memcpy_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, imageDescription, TINYTIFFWRITER_DESCRIPTION_SIZE);
-    #else
-                      memcpy(description, imageDescription, TINYTIFFWRITER_DESCRIPTION_SIZE);
-    #endif
-                      description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0';
+                    MEMCPY_S(description, sizeof(description), imageDescription, TINYTIFFWRITER_DESCRIPTION_SIZE);
+                    description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0';
                   }
               } else {
-    #ifdef HAVE_SPRINTF_S
-                  sprintf_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, "TinyTIFFWriter_version=1.1\nimages=%ld", (unsigned long)(tiff->frames));
-    #else
-                  sprintf(description, "TinyTIFFWriter_version=1.1\nimages=%ld", (unsigned long)(tiff->frames));
-    #endif
+                  SPRINTF_S(description, sizeof(description), "TinyTIFFWriter_version=1.1\nimages=%ld", (unsigned long)(tiff->frames));
               }
 #ifdef HAVE_STRNLEN_S
-              const size_t dlen=strnlen_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1);
+              const size_t dlen=strnlen_s(description, sizeof(description));
 #else
               const size_t dlen=strlen(description);
 #endif
@@ -858,63 +846,23 @@ void TinyTIFFWriter_close_withmetadatadescription(TinyTIFFWriterFile* tiff, doub
     if (tiff) {
       char description[TINYTIFFWRITER_DESCRIPTION_SIZE+1];
       memset(description, ' ', TINYTIFFWRITER_DESCRIPTION_SIZE+1);
-#ifdef HAVE_SPRINTF_S
-      const int spwlen=256;
-#endif
       char spw[256];
-#ifdef HAVE_SPRINTF_S
-      sprintf_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, "TinyTIFFWriter_version=1.1\nimages=%lu", (unsigned long int)tiff->frames);
-#else
-      sprintf(description, "TinyTIFFWriter_version=1.1\nimages=%lu", (unsigned long int)tiff->frames);
-#endif
+      SPRINTF_S(description, sizeof(description), "TinyTIFFWriter_version=1.1\nimages=%lu", (unsigned long int)tiff->frames);
       if (fabs(pixel_width)>10.0*DBL_MIN) {
-#ifdef HAVE_SPRINTF_S
-          sprintf_s(spw, spwlen, "\npixel_width=%lf ", pixel_width);
-#else
-          sprintf(spw, "\npixel_width=%lf ", pixel_width);
-#endif
-#ifdef HAVE_STRCAT_S
-          strcat_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, spw);
-#else
-          strcat(description,spw);
-#endif
+          SPRINTF_S(spw, sizeof(spw), "\npixel_width=%lf ", pixel_width);
+          STRCAT_S(description, sizeof(description), spw);
       }
       if (fabs(pixel_height)>10.0*DBL_MIN) {
-#ifdef HAVE_SPRINTF_S
-          sprintf_s(spw, spwlen, "\npixel_height=%lf ", pixel_height);
-#else
-          sprintf(spw, "\npixel_height=%lf ", pixel_height);
-#endif
-#ifdef HAVE_STRCAT_S
-          strcat_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, spw);
-#else
-          strcat(description,spw);
-#endif
+          SPRINTF_S(spw, sizeof(spw), "\npixel_height=%lf ", pixel_height);
+          STRCAT_S(description, sizeof(description), spw);
       }
       if (fabs(deltaz)>10.0*DBL_MIN) {
-#ifdef HAVE_SPRINTF_S
-          sprintf_s(spw, spwlen, "\ndeltaz=%lf ", deltaz);
-#else
-          sprintf(spw, "\ndeltaz=%lf ", deltaz);
-#endif
-#ifdef HAVE_STRCAT_S
-          strcat_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, spw);
-#else
-          strcat(description,spw);
-#endif
+          SPRINTF_S(spw, sizeof(spw), "\ndeltaz=%lf ", deltaz);
+          STRCAT_S(description, sizeof(description), spw);
       }
       if (fabs(frametime)>10.0*DBL_MIN) {
-#ifdef HAVE_SPRINTF_S
-          sprintf_s(spw, spwlen, "\nframetime=%lg ", frametime);
-#else
-          sprintf(spw, "\nframetime=%lg ", frametime);
-#endif
-#ifdef HAVE_STRCAT_S
-          strcat_s(description, TINYTIFFWRITER_DESCRIPTION_SIZE+1, spw);
-#else
-          strcat(description,spw);
-#endif
-
+          SPRINTF_S(spw, sizeof(spw), "\nframetime=%lg ", frametime);
+          STRCAT_S(description, sizeof(description), spw);
       }
       //description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0';
       TinyTIFFWriter_close_withdescription(tiff, description);
@@ -963,8 +911,8 @@ int TinyTIFFWriter_writeImageMultiSample(TinyTIFFWriterFile *tiff, const void *d
            So fill it with spaces now. */
         memset(description, ' ', TINYTIFFWRITER_DESCRIPTION_SIZE+1);
         //TODO a customer specific string (our yaml)
-        strncpy(description, "TinyTIFFWriter_version=1.1\n", TINYTIFFWRITER_DESCRIPTION_SIZE);
-        description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0'; // reserve for 1024 exifdata
+        strncpy(description, "TinyTIFFWriter_version=1.1\n", sizeof(description));
+        //description[TINYTIFFWRITER_DESCRIPTION_SIZE]='\0'; // reserve for 1024 exifdata
         TinyTIFFWriter_writeIFDEntryASCIIARRAY(tiff, TIFF_FIELD_IMAGEDESCRIPTION, description, TINYTIFFWRITER_DESCRIPTION_SIZE, &datapos, &sizepos);
         tiff->descriptionOffset=tiff->lastStartPos+datapos;
         tiff->descriptionSizeOffset=tiff->lastStartPos+sizepos;
