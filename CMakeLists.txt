@@ -32,7 +32,7 @@ if(NOT DEFINED TinyTIFF_BUILD_TESTS)
     option(TinyTIFF_BUILD_TESTS "Build the tests and examples" ON)
 endif()
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-    option(CMAKE_INSTALL_PREFIX "Install directory" ${CMAKE_CURRENT_SOURCE_DIR}/output)
+    option(CMAKE_INSTALL_PREFIX "Install directory" ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 endif()
 
 
@@ -55,9 +55,9 @@ if (NOT TinyTIFF_DOC_INSTALL_DIR)
 endif()
 
 
-# place all DLLs and EXEs in the subdirectory output of the top level directory of the build tree
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+# place all DLLs and EXEs in the subdirectory bin of the top level directory of the build tree
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 
 if(TinyTIFF_BUILD_DECORATE_LIBNAMES_WITH_BUILDTYPE)
@@ -87,8 +87,9 @@ message("  CMAKE_INSTALL_PREFIX                            = ${CMAKE_INSTALL_PRE
 # now add subdirectories with the library code ...
 add_subdirectory(src)
 
-# ... and optionally the examples
+# ... and optionally the tests
 if(TinyTIFF_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(tests)
 endif()
 
