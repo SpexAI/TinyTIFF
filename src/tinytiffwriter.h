@@ -256,6 +256,16 @@ extern "C" {
     */
     TINYTIFF_EXPORT void TinyTIFFWriter_close_withmetadatadescription(TinyTIFFWriterFile* tiff, double pixel_width, double pixel_height, double frametime, double deltaz);
 
+/*! \brief write an array of characters (ASCII TEXT) as IFD entry
+    \ingroup tinytiffwriter_C
+    \internal
+    datapos and sizepos may be NULL
+
+    \note This function writes into TinyTIFFFile::lastHeader, starting at the position TinyTIFFFile::pos
+ */
+    TINYTIFF_EXPORT void TinyTIFFWriter_writeIFDEntryASCIIARRAY(TinyTIFFWriterFile* tiff, uint16_t tag, const char* data, uint32_t N, int* datapos, int* sizepos);
+
+
     /*! \brief close a given TIFF file
         \ingroup tinytiffwriter_C
 
@@ -277,6 +287,7 @@ extern "C" {
         This function also releases memory allocated in TinyTIFFWriter_open() in \a tiff.
      */
     TINYTIFF_EXPORT void TinyTIFFWriter_close_withdescription(TinyTIFFWriterFile* tiff, const char* imageDescription);
+    
 #ifdef __cplusplus
 }
 #endif

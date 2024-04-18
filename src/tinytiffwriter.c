@@ -628,7 +628,7 @@ static void TinyTIFFWriter_writeIFDEntryLONGARRAY_allsame(TinyTIFFWriterFile* ti
 
     \note This function writes into TinyTIFFFile::lastHeader, starting at the position TinyTIFFFile::pos
  */
-static void TinyTIFFWriter_writeIFDEntryASCIIARRAY(TinyTIFFWriterFile* tiff, uint16_t tag, const char* data, uint32_t N, int* datapos, int* sizepos) {
+void TinyTIFFWriter_writeIFDEntryASCIIARRAY(TinyTIFFWriterFile* tiff, uint16_t tag, const char* data, uint32_t N, int* datapos, int* sizepos) {
     if (!tiff) return;
     if (tiff->lastIFDCount<TIFF_HEADER_MAX_ENTRIES) {
         tiff->lastIFDCount++;
